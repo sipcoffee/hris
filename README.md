@@ -2,7 +2,7 @@
 
 A lean Human Resources Information System. Employees manage their own profile, request time off, and clock attendance. Managers approve their team's leave. Admins (HR) run the directory, departments, leave policies, and announcements.
 
-Full plan in [`mvp.md`](./mvp.md). The current build state is **step 5: attendance** — employees check in / check out daily, the monthly grid surfaces LATE / HALF_DAY auto-derivations, ON_LEAVE is computed from approved leave requests, and admins can correct any record. Step 6 (announcements + admin dashboard stats) is the last MVP step per `mvp.md` §11.
+Full plan in [`mvp.md`](./mvp.md). **The MVP is complete** — all six steps in `mvp.md` §11 are shipped: auth, directory + departments, leave types + balances, leave requests with approval, attendance with check-in/check-out, and admin dashboard stats + announcements. See "Next steps" in `mvp.md` §10 for what's intentionally out of scope.
 
 ## Stack
 
@@ -15,11 +15,11 @@ Full plan in [`mvp.md`](./mvp.md). The current build state is **step 5: attendan
 hris/
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/        # auth, departments, employees, leave-types, leave/*, attendance
+│   │   ├── api/v1/        # auth, departments, employees, leave/*, attendance, announcements, admin
 │   │   ├── core/          # Config, DB, security
-│   │   ├── models/        # User, Department, Employee, LeaveType, LeaveBalance, LeaveRequest, AttendanceRecord
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── services/      # leave_service, attendance_service (LATE / HALF_DAY / ON_LEAVE derivations)
+│   │   ├── models/        # User, Department, Employee, LeaveType, LeaveBalance, LeaveRequest, AttendanceRecord, Announcement
+│   │   ├── schemas/       # Pydantic schemas (incl. admin stats)
+│   │   ├── services/      # leave_service, attendance_service (derivations + leave overlay)
 │   │   ├── main.py
 │   │   └── seed.py        # Admin + sample departments + employees + leave types
 │   ├── alembic/
@@ -28,10 +28,10 @@ hris/
 │   └── .env.example
 └── frontend/
     ├── src/
-    │   ├── components/    # ui/ primitives, layouts, leave/*, attendance/CheckInCard + StatusBadge, ProtectedRoute
-    │   ├── hooks/         # useEmployees, useDepartments, useLeaveTypes, useLeaveBalances, useLeaveRequests, useAttendance
+    │   ├── components/    # ui/ primitives, layouts, leave/*, attendance/*, announcements/*, ProtectedRoute
+    │   ├── hooks/         # useEmployees, useDepartments, useLeaveTypes/Balances/Requests, useAttendance, useAnnouncements, useAdmin
     │   ├── lib/           # api client, utils
-    │   ├── pages/         # Login, Dashboard, Directory, MyProfile, Leave, LeaveNew, Attendance, team/*, admin/*
+    │   ├── pages/         # Login, Dashboard, Directory, MyProfile, Leave, Attendance, team/*, admin/*
     │   ├── stores/        # Zustand auth store
     │   └── types/
     ├── package.json
@@ -93,7 +93,7 @@ The seed script creates an admin from `.env`:
 
 There is no public sign-up. Admins provision employees through the admin UI (`/admin/employees/new`) or the `POST /employees` API. The seed script also creates three sample departments, three managers, and six employees — all using password `ChangeMe123!` and forced to change on first login.
 
-## API surface (steps 1–5)
+## API surface (final)
 
 | Route | Method | Auth | Notes |
 |-------|--------|------|-------|
@@ -128,16 +128,23 @@ There is no public sign-up. Admins provision employees through the admin UI (`/a
 | `/attendance` | GET | manager (own team) / admin | Filters: `employee_id`, `department_id`, `from`, `to` |
 | `/attendance` | POST | admin | Manual entry (idempotent per `(employee_id, date)`) |
 | `/attendance/{id}` | PUT / DELETE | admin | Correction / removal; recomputes hours and status |
+| `/announcements` | GET | user | Latest first; `?limit=` (default 50, max 200) |
+| `/announcements` | POST | admin | Title + body |
+| `/announcements/{id}` | DELETE | admin | |
+| `/admin/stats` | GET | admin | Headcount totals + by status + by department, pending leaves, today's attendance summary |
+| `/admin/users` | GET | admin | Every login on the system, with linked employee name if any |
 | `/health` | GET | — | Liveness probe |
 
-Subsequent steps add `/announcements`, `/admin/stats` (see `mvp.md` §5).
-
-## After pulling step 5
+## After pulling step 6
 
 ```bash
 cd backend
-alembic revision --autogenerate -m "attendance records"
+alembic revision --autogenerate -m "announcements"
 alembic upgrade head
 ```
 
-The new migration adds the `attendance_records` table (unique on `(employee_id, date)`) and the `attendance_status` enum. The `ON_LEAVE` status is **not stored** — it's overlaid on read for any date covered by an APPROVED leave request, so no backfill is needed when leave is decided. The LATE threshold is controlled by `WORKDAY_START_HOUR` and `WORKDAY_LATE_THRESHOLD_MINUTES` in `.env` (server time).
+The new migration adds the `announcements` table (FK to `users.posted_by_user_id`). No new seed data is needed — the admin can post the first announcement at `/admin/announcements`.
+
+## Roles in one paragraph
+
+`EMPLOYEE` sees the directory, edits their own contact details, files leave, and checks in / out. `MANAGER` adds approval of their direct reports' leave and the team attendance view. `ADMIN` adds the entire admin section: employee CRUD, departments, leave policies, leave override, attendance corrections, announcements, the user audit, and the stats overview. Admins cannot self-terminate.

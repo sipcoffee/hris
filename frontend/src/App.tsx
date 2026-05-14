@@ -13,6 +13,7 @@ import { LeaveNewPage } from "@/pages/LeaveNewPage";
 import { LeavePage } from "@/pages/LeavePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MyProfilePage } from "@/pages/MyProfilePage";
+import { AdminAnnouncementsPage } from "@/pages/admin/AdminAnnouncementsPage";
 import { AdminAttendancePage } from "@/pages/admin/AdminAttendancePage";
 import { AdminDepartmentsPage } from "@/pages/admin/AdminDepartmentsPage";
 import { AdminEmployeeFormPage } from "@/pages/admin/AdminEmployeeFormPage";
@@ -20,6 +21,7 @@ import { AdminEmployeesPage } from "@/pages/admin/AdminEmployeesPage";
 import { AdminLeavePage } from "@/pages/admin/AdminLeavePage";
 import { AdminLeaveTypesPage } from "@/pages/admin/AdminLeaveTypesPage";
 import { AdminOverviewPage } from "@/pages/admin/AdminOverviewPage";
+import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { TeamAttendancePage } from "@/pages/team/TeamAttendancePage";
 import { TeamLeavePage } from "@/pages/team/TeamLeavePage";
 import { useAuthStore } from "@/stores/auth";
@@ -84,6 +86,8 @@ export function App() {
         <Route path="leave-types" element={<AdminLeaveTypesPage />} />
         <Route path="leave" element={<AdminLeavePage />} />
         <Route path="attendance" element={<AdminAttendancePage />} />
+        <Route path="announcements" element={<AdminAnnouncementsPage />} />
+        <Route path="users" element={<AdminUsersPage />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

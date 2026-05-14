@@ -147,3 +147,52 @@ export interface AttendanceRecord {
   created_at: string;
   updated_at: string;
 }
+
+export interface PostedBy {
+  id: number;
+  email: string;
+}
+
+export interface Announcement {
+  id: number;
+  title: string;
+  body: string;
+  posted_at: string;
+  posted_by: PostedBy;
+}
+
+export interface StatsByDepartment {
+  department_id: number | null;
+  department_name: string;
+  count: number;
+}
+
+export interface HeadcountStats {
+  total_active: number;
+  by_status: Record<string, number>;
+  by_department: StatsByDepartment[];
+}
+
+export interface TodayAttendanceStats {
+  present: number;
+  late: number;
+  half_day: number;
+  on_leave: number;
+  not_checked_in: number;
+}
+
+export interface AdminStats {
+  headcount: HeadcountStats;
+  pending_leave_count: number;
+  today_attendance: TodayAttendanceStats;
+}
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  role: UserRole;
+  is_active: boolean;
+  must_change_password: boolean;
+  created_at: string;
+  employee_name: string | null;
+}

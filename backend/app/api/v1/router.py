@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    admin,
+    announcements,
     attendance,
     auth,
     departments,
@@ -18,3 +20,5 @@ api_router.include_router(leave_types.router)
 api_router.include_router(leave_balances.router)
 api_router.include_router(leave_requests.router)
 api_router.include_router(attendance.router)
+api_router.include_router(announcements.router)
+api_router.include_router(admin.router)

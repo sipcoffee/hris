@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarRange, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { AnnouncementsWidget } from "@/components/announcements/AnnouncementsWidget";
 import { CheckInCard } from "@/components/attendance/CheckInCard";
 import { LeaveBalanceWidget } from "@/components/leave/LeaveBalanceWidget";
 import { Button } from "@/components/ui/button";
@@ -101,27 +102,10 @@ export function DashboardPage() {
         )}
       </div>
 
-      {user.employee && (
-        <div className="mt-8">
-          <LeaveBalanceWidget />
-        </div>
-      )}
-
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Coming next</CardTitle>
-          <CardDescription>
-            Step 5 (attendance with check-in / check-out, team & admin views) is live. Announcements
-            and admin dashboard stats wrap up the MVP next.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>Announcements posted by admins</li>
-            <li>Admin dashboard stats (headcount, pending leave, today's attendance)</li>
-          </ul>
-        </CardContent>
-      </Card>
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        {user.employee && <LeaveBalanceWidget />}
+        <AnnouncementsWidget />
+      </div>
     </div>
   );
 }

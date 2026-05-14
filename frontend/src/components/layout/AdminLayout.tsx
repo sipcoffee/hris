@@ -6,6 +6,8 @@ import {
   Clock,
   LayoutDashboard,
   LogOut,
+  Megaphone,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
@@ -22,6 +24,8 @@ const NAV = [
   { to: "/admin/leave-types", label: "Leave types", icon: CalendarClock },
   { to: "/admin/leave", label: "Leave requests", icon: CalendarRange },
   { to: "/admin/attendance", label: "Attendance", icon: Clock },
+  { to: "/admin/announcements", label: "Announcements", icon: Megaphone },
+  { to: "/admin/users", label: "Users", icon: ShieldCheck },
 ];
 
 export function AdminLayout() {
