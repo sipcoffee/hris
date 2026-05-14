@@ -36,6 +36,7 @@ function Navbar() {
           <NavLink to="/dashboard" className={navItem}>Dashboard</NavLink>
           <NavLink to="/directory" className={navItem}>Directory</NavLink>
           <NavLink to="/leave" className={navItem}>Time off</NavLink>
+          <NavLink to="/attendance" className={navItem}>Attendance</NavLink>
           {canManage && (
             <NavLink to="/team/leave" className={navItem}>Team</NavLink>
           )}
@@ -87,6 +88,7 @@ function Navbar() {
             <MobileLink to="/dashboard" onClick={() => setOpen(false)}>Dashboard</MobileLink>
             <MobileLink to="/directory" onClick={() => setOpen(false)}>Directory</MobileLink>
             <MobileLink to="/leave" onClick={() => setOpen(false)}>Time off</MobileLink>
+            <MobileLink to="/attendance" onClick={() => setOpen(false)}>Attendance</MobileLink>
             {canManage && (
               <MobileLink to="/team/leave" onClick={() => setOpen(false)}>Team</MobileLink>
             )}

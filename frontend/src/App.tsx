@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { AppShell } from "@/components/layout/AppShell";
+import { AttendancePage } from "@/pages/AttendancePage";
 import { ChangePasswordPage } from "@/pages/ChangePasswordPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { DirectoryPage } from "@/pages/DirectoryPage";
@@ -12,12 +13,14 @@ import { LeaveNewPage } from "@/pages/LeaveNewPage";
 import { LeavePage } from "@/pages/LeavePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MyProfilePage } from "@/pages/MyProfilePage";
+import { AdminAttendancePage } from "@/pages/admin/AdminAttendancePage";
 import { AdminDepartmentsPage } from "@/pages/admin/AdminDepartmentsPage";
 import { AdminEmployeeFormPage } from "@/pages/admin/AdminEmployeeFormPage";
 import { AdminEmployeesPage } from "@/pages/admin/AdminEmployeesPage";
 import { AdminLeavePage } from "@/pages/admin/AdminLeavePage";
 import { AdminLeaveTypesPage } from "@/pages/admin/AdminLeaveTypesPage";
 import { AdminOverviewPage } from "@/pages/admin/AdminOverviewPage";
+import { TeamAttendancePage } from "@/pages/team/TeamAttendancePage";
 import { TeamLeavePage } from "@/pages/team/TeamLeavePage";
 import { useAuthStore } from "@/stores/auth";
 
@@ -45,12 +48,21 @@ export function App() {
         <Route path="/me" element={<MyProfilePage />} />
         <Route path="/leave" element={<LeavePage />} />
         <Route path="/leave/new" element={<LeaveNewPage />} />
+        <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route
           path="/team/leave"
           element={
             <ProtectedRoute requiredRole="MANAGER">
               <TeamLeavePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/team/attendance"
+          element={
+            <ProtectedRoute requiredRole="MANAGER">
+              <TeamAttendancePage />
             </ProtectedRoute>
           }
         />
@@ -71,6 +83,7 @@ export function App() {
         <Route path="departments" element={<AdminDepartmentsPage />} />
         <Route path="leave-types" element={<AdminLeaveTypesPage />} />
         <Route path="leave" element={<AdminLeavePage />} />
+        <Route path="attendance" element={<AdminAttendancePage />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

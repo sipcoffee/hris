@@ -2,7 +2,7 @@
 
 A lean Human Resources Information System. Employees manage their own profile, request time off, and clock attendance. Managers approve their team's leave. Admins (HR) run the directory, departments, leave policies, and announcements.
 
-Full plan in [`mvp.md`](./mvp.md). The current build state is **step 4: leave requests** — employees request leave with live business-day and balance feedback, managers approve / reject their reports' requests, admins see everything and can re-credit cancellations. Steps 5–6 (attendance, announcements) are next per `mvp.md` §11.
+Full plan in [`mvp.md`](./mvp.md). The current build state is **step 5: attendance** — employees check in / check out daily, the monthly grid surfaces LATE / HALF_DAY auto-derivations, ON_LEAVE is computed from approved leave requests, and admins can correct any record. Step 6 (announcements + admin dashboard stats) is the last MVP step per `mvp.md` §11.
 
 ## Stack
 
@@ -15,11 +15,11 @@ Full plan in [`mvp.md`](./mvp.md). The current build state is **step 4: leave re
 hris/
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/        # auth, departments, employees, leave-types, leave/balances, leave/requests
+│   │   ├── api/v1/        # auth, departments, employees, leave-types, leave/*, attendance
 │   │   ├── core/          # Config, DB, security
-│   │   ├── models/        # User, Department, Employee, LeaveType, LeaveBalance, LeaveRequest
+│   │   ├── models/        # User, Department, Employee, LeaveType, LeaveBalance, LeaveRequest, AttendanceRecord
 │   │   ├── schemas/       # Pydantic schemas
-│   │   ├── services/      # leave_service (allocation, business-day math, balance lookup)
+│   │   ├── services/      # leave_service, attendance_service (LATE / HALF_DAY / ON_LEAVE derivations)
 │   │   ├── main.py
 │   │   └── seed.py        # Admin + sample departments + employees + leave types
 │   ├── alembic/
@@ -28,10 +28,10 @@ hris/
 │   └── .env.example
 └── frontend/
     ├── src/
-    │   ├── components/    # ui/ primitives, layouts, leave/LeaveBalanceWidget, leave/LeaveStatusBadge, ProtectedRoute
-    │   ├── hooks/         # useEmployees, useDepartments, useLeaveTypes, useLeaveBalances, useLeaveRequests
+    │   ├── components/    # ui/ primitives, layouts, leave/*, attendance/CheckInCard + StatusBadge, ProtectedRoute
+    │   ├── hooks/         # useEmployees, useDepartments, useLeaveTypes, useLeaveBalances, useLeaveRequests, useAttendance
     │   ├── lib/           # api client, utils
-    │   ├── pages/         # Login, Dashboard, Directory, MyProfile, Leave, LeaveNew, team/*, admin/*
+    │   ├── pages/         # Login, Dashboard, Directory, MyProfile, Leave, LeaveNew, Attendance, team/*, admin/*
     │   ├── stores/        # Zustand auth store
     │   └── types/
     ├── package.json
@@ -93,7 +93,7 @@ The seed script creates an admin from `.env`:
 
 There is no public sign-up. Admins provision employees through the admin UI (`/admin/employees/new`) or the `POST /employees` API. The seed script also creates three sample departments, three managers, and six employees — all using password `ChangeMe123!` and forced to change on first login.
 
-## API surface (steps 1–4)
+## API surface (steps 1–5)
 
 | Route | Method | Auth | Notes |
 |-------|--------|------|-------|
@@ -122,16 +122,22 @@ There is no public sign-up. Admins provision employees through the admin UI (`/a
 | `/leave/requests/{id}` | GET | requester / manager / admin | |
 | `/leave/requests/{id}/decision` | PATCH | manager-of-requester / admin | Body `{status: APPROVED \| REJECTED, note?}`; debits balance on approve |
 | `/leave/requests/{id}/cancel` | PATCH | requester (PENDING only) / admin (any) | Re-credits balance if was APPROVED |
+| `/attendance/check-in` | POST | user (employee) | Idempotent for today; sets LATE if past the configured threshold |
+| `/attendance/check-out` | POST | user (employee) | Requires existing check-in; computes hours, sets HALF_DAY if < 4 |
+| `/attendance/me` | GET | user | Own; `?from=&to=` default to current month |
+| `/attendance` | GET | manager (own team) / admin | Filters: `employee_id`, `department_id`, `from`, `to` |
+| `/attendance` | POST | admin | Manual entry (idempotent per `(employee_id, date)`) |
+| `/attendance/{id}` | PUT / DELETE | admin | Correction / removal; recomputes hours and status |
 | `/health` | GET | — | Liveness probe |
 
-Subsequent steps add `/attendance/*`, `/announcements`, `/admin/stats` (see `mvp.md` §5).
+Subsequent steps add `/announcements`, `/admin/stats` (see `mvp.md` §5).
 
-## After pulling step 4
+## After pulling step 5
 
 ```bash
 cd backend
-alembic revision --autogenerate -m "leave requests"
+alembic revision --autogenerate -m "attendance records"
 alembic upgrade head
 ```
 
-The new migration adds the `leave_requests` table (FKs to `employees`, `leave_types`, and `users` for `decided_by_user_id`) plus the `leave_status` enum. No new seed data is required — existing users can immediately file requests against their step-3 balances.
+The new migration adds the `attendance_records` table (unique on `(employee_id, date)`) and the `attendance_status` enum. The `ON_LEAVE` status is **not stored** — it's overlaid on read for any date covered by an APPROVED leave request, so no backfill is needed when leave is decided. The LATE threshold is controlled by `WORKDAY_START_HOUR` and `WORKDAY_LATE_THRESHOLD_MINUTES` in `.env` (server time).

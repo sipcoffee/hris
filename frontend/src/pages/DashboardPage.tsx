@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarRange, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { CheckInCard } from "@/components/attendance/CheckInCard";
 import { LeaveBalanceWidget } from "@/components/leave/LeaveBalanceWidget";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,12 @@ export function DashboardPage() {
           {user.employee?.department && ` · ${user.employee.department.name}`}
         </p>
       </div>
+
+      {user.employee && (
+        <div className="mb-6">
+          <CheckInCard />
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="transition-colors hover:border-primary/40">
@@ -67,7 +74,7 @@ export function DashboardPage() {
               <CardDescription>
                 {user.role === "ADMIN"
                   ? "Manage employees, policies, and requests."
-                  : "Review and decide team leave requests."}
+                  : "Review team leave and attendance."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -104,13 +111,14 @@ export function DashboardPage() {
         <CardHeader>
           <CardTitle>Coming next</CardTitle>
           <CardDescription>
-            Step 4 (leave requests + manager approval) is live. Attendance check-in / check-out is next.
+            Step 5 (attendance with check-in / check-out, team & admin views) is live. Announcements
+            and admin dashboard stats wrap up the MVP next.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>Attendance check-in / check-out</li>
-            <li>Announcements and admin dashboard stats</li>
+            <li>Announcements posted by admins</li>
+            <li>Admin dashboard stats (headcount, pending leave, today's attendance)</li>
           </ul>
         </CardContent>
       </Card>

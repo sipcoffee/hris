@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarClock,
   CalendarRange,
+  Clock,
   LayoutDashboard,
   LogOut,
   Users,
@@ -20,6 +21,7 @@ const NAV = [
   { to: "/admin/departments", label: "Departments", icon: Building2 },
   { to: "/admin/leave-types", label: "Leave types", icon: CalendarClock },
   { to: "/admin/leave", label: "Leave requests", icon: CalendarRange },
+  { to: "/admin/attendance", label: "Attendance", icon: Clock },
 ];
 
 export function AdminLayout() {

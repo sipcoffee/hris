@@ -132,3 +132,18 @@ export interface LeaveRequest {
   decided_by: DecidedBy | null;
   created_at: string;
 }
+
+export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "HALF_DAY" | "ON_LEAVE";
+
+export interface AttendanceRecord {
+  id: number;
+  employee: EmployeeSummary;
+  date: string;
+  check_in_at: string | null;
+  check_out_at: string | null;
+  hours_worked: string | null;
+  status: AttendanceStatus;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
