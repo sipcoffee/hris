@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import CurrentUser, DbSession
 from app.core.security import create_access_token, hash_password, verify_password
+from app.models.employee import Employee
 from app.models.user import User
 from app.schemas.auth import ChangePasswordIn, LoginIn, Token
-from app.schemas.user import UserOut
+from app.schemas.user import MeOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -21,9 +23,14 @@ def login(payload: LoginIn, db: DbSession) -> Token:
     return Token(access_token=token)
 
 
-@router.get("/me", response_model=UserOut)
-def me(user: CurrentUser) -> User:
-    return user
+@router.get("/me", response_model=MeOut)
+def me(user: CurrentUser, db: DbSession) -> User:
+    loaded = db.scalar(
+        select(User)
+        .options(selectinload(User.employee).selectinload(Employee.department))
+        .where(User.id == user.id)
+    )
+    return loaded or user
 
 
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)

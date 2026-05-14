@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Enum, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
@@ -23,3 +23,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    employee: Mapped["Employee | None"] = relationship(  # noqa: F821
+        "Employee", back_populates="user", uselist=False
+    )

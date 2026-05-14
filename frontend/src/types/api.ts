@@ -1,5 +1,81 @@
 export type UserRole = "EMPLOYEE" | "MANAGER" | "ADMIN";
 
+export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN";
+export type EmploymentStatus = "ACTIVE" | "ON_LEAVE" | "TERMINATED";
+
+export interface DepartmentSummary {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface DepartmentHead {
+  id: number;
+  first_name: string;
+  last_name: string;
+  job_title: string;
+}
+
+export interface Department extends DepartmentSummary {
+  description: string | null;
+  head_employee: DepartmentHead | null;
+  employee_count: number;
+  created_at: string;
+}
+
+export interface EmployeeSummary {
+  id: number;
+  first_name: string;
+  last_name: string;
+  job_title: string;
+}
+
+export interface Employee {
+  id: number;
+  user_id: number;
+  email: string;
+  role: UserRole;
+  is_active: boolean;
+
+  first_name: string;
+  last_name: string;
+  job_title: string;
+  employment_type: EmploymentType;
+  employment_status: EmploymentStatus;
+  hire_date: string;
+  termination_date: string | null;
+  department: DepartmentSummary | null;
+  manager: EmployeeSummary | null;
+
+  date_of_birth: string | null;
+  phone: string | null;
+  address: string | null;
+  salary: string | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmployeeListResponse {
+  items: Employee[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface EmployeeCreated {
+  employee: Employee;
+  temporary_password: string;
+}
+
+export interface MeEmployee {
+  id: number;
+  first_name: string;
+  last_name: string;
+  job_title: string;
+  department: DepartmentSummary | null;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -7,6 +83,7 @@ export interface User {
   is_active: boolean;
   must_change_password: boolean;
   created_at: string;
+  employee: MeEmployee | null;
 }
 
 export interface Token {

@@ -1,4 +1,4 @@
-import { LogOut, Menu, User as UserIcon, X } from "lucide-react";
+import { LogOut, Menu, Shield, User as UserIcon, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 
@@ -22,7 +22,7 @@ function Navbar() {
         "after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-primary",
     );
 
-  const badge = user.role === "ADMIN" ? "Admin" : user.role === "MANAGER" ? "Manager" : undefined;
+  const badge = user.role === "MANAGER" ? "Manager" : undefined;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -32,9 +32,12 @@ function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
-          <NavLink to="/dashboard" className={navItem}>
-            Dashboard
-          </NavLink>
+          <NavLink to="/dashboard" className={navItem}>Dashboard</NavLink>
+          <NavLink to="/directory" className={navItem}>Directory</NavLink>
+          <NavLink to="/me" className={navItem}>My profile</NavLink>
+          {user.role === "ADMIN" && (
+            <NavLink to="/admin" className={navItem}>Admin</NavLink>
+          )}
         </nav>
 
         <div className="flex items-center gap-1">
@@ -43,7 +46,11 @@ function Navbar() {
               <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
                 <UserIcon className="h-3.5 w-3.5" />
               </span>
-              <span className="font-medium">{user.email}</span>
+              <span className="font-medium">
+                {user.employee
+                  ? `${user.employee.first_name} ${user.employee.last_name}`
+                  : user.email}
+              </span>
             </div>
             <Button
               variant="ghost"
@@ -72,13 +79,14 @@ function Navbar() {
       {open && (
         <div className="border-t border-border/60 bg-background md:hidden">
           <div className="container flex flex-col gap-1 py-3">
-            <NavLink
-              to="/dashboard"
-              className="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-              onClick={() => setOpen(false)}
-            >
-              Dashboard
-            </NavLink>
+            <MobileLink to="/dashboard" onClick={() => setOpen(false)}>Dashboard</MobileLink>
+            <MobileLink to="/directory" onClick={() => setOpen(false)}>Directory</MobileLink>
+            <MobileLink to="/me" onClick={() => setOpen(false)}>My profile</MobileLink>
+            {user.role === "ADMIN" && (
+              <MobileLink to="/admin" onClick={() => setOpen(false)}>
+                <Shield className="mr-2 inline h-4 w-4" /> Admin
+              </MobileLink>
+            )}
             <button
               className="rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted"
               onClick={() => {
@@ -93,6 +101,26 @@ function Navbar() {
         </div>
       )}
     </header>
+  );
+}
+
+function MobileLink({
+  to,
+  onClick,
+  children,
+}: {
+  to: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <NavLink
+      to={to}
+      className="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+      onClick={onClick}
+    >
+      {children}
+    </NavLink>
   );
 }
 

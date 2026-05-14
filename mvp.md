@@ -417,8 +417,8 @@ Listed so the line is explicit. Each is a known future module, not an oversight.
 
 A two-week-ish sequence. Each step is shippable on its own.
 
-1. **Skeleton + auth** — repo bootstrap, FastAPI app, JWT, `User`, `/auth/login`, `/auth/me`, frontend shell, login page, Zustand auth store. (1–2 days)
-2. **Departments + Employees CRUD** — backend models, admin pages, directory page. (2 days)
+1. **Skeleton + auth** — repo bootstrap, FastAPI app, JWT, `User`, `/auth/login`, `/auth/me`, frontend shell, login page, Zustand auth store. (1–2 days) **✅ done**
+2. **Departments + Employees CRUD** — backend models, admin pages, directory page. (2 days) **✅ done**
 3. **Leave types + balances** — models, seed, admin CRUD for types, balance widget on dashboard. (1 day)
 4. **Leave requests** — request form, approval flow, balance math service, manager queue. (2 days)
 5. **Attendance** — check-in / check-out card, own attendance grid, manager team view, admin correction. (2 days)
