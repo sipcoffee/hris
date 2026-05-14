@@ -2,7 +2,7 @@
 
 A lean Human Resources Information System. Employees manage their own profile, request time off, and clock attendance. Managers approve their team's leave. Admins (HR) run the directory, departments, leave policies, and announcements.
 
-Full plan in [`mvp.md`](./mvp.md). The current build state is **step 2: departments + employees** — full directory, employee provisioning, admin CRUD, org structure (manager + department head). Steps 3–6 (leave types/balances, leave requests, attendance, announcements) are next per `mvp.md` §11.
+Full plan in [`mvp.md`](./mvp.md). The current build state is **step 3: leave types + balances** — admin can configure leave policies, every employee gets per-year balance rows allocated automatically, and the dashboard surfaces remaining days. Steps 4–6 (leave requests, attendance, announcements) are next per `mvp.md` §11.
 
 ## Stack
 
@@ -15,20 +15,21 @@ Full plan in [`mvp.md`](./mvp.md). The current build state is **step 2: departme
 hris/
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/        # auth, departments, employees
+│   │   ├── api/v1/        # auth, departments, employees, leave-types, leave/balances
 │   │   ├── core/          # Config, DB, security
-│   │   ├── models/        # User, Department, Employee
+│   │   ├── models/        # User, Department, Employee, LeaveType, LeaveBalance
 │   │   ├── schemas/       # Pydantic schemas
+│   │   ├── services/      # leave_service (balance allocation)
 │   │   ├── main.py
-│   │   └── seed.py        # Admin + sample departments + employees
+│   │   └── seed.py        # Admin + sample departments + employees + leave types
 │   ├── alembic/
 │   ├── alembic.ini
 │   ├── requirements.txt
 │   └── .env.example
 └── frontend/
     ├── src/
-    │   ├── components/    # ui/ primitives, layouts (AppShell, AdminLayout), ProtectedRoute
-    │   ├── hooks/         # useEmployees, useDepartments
+    │   ├── components/    # ui/ primitives, layouts, leave/LeaveBalanceWidget, ProtectedRoute
+    │   ├── hooks/         # useEmployees, useDepartments, useLeaveTypes, useLeaveBalances
     │   ├── lib/           # api client, utils
     │   ├── pages/         # Login, Dashboard, Directory, MyProfile, admin/*
     │   ├── stores/        # Zustand auth store
@@ -92,7 +93,7 @@ The seed script creates an admin from `.env`:
 
 There is no public sign-up. Admins provision employees through the admin UI (`/admin/employees/new`) or the `POST /employees` API. The seed script also creates three sample departments, three managers, and six employees — all using password `ChangeMe123!` and forced to change on first login.
 
-## API surface (steps 1–2)
+## API surface (steps 1–3)
 
 | Route | Method | Auth | Notes |
 |-------|--------|------|-------|
@@ -106,20 +107,27 @@ There is no public sign-up. Admins provision employees through the admin UI (`/a
 | `/employees/me` | GET / PUT | user | Own profile; PUT limited to phone/address/DOB |
 | `/employees/{id}` | GET | user | PII masked unless self or admin |
 | `/employees/{id}/reports` | GET | self-or-admin | Direct reports |
-| `/employees` | POST | admin | Creates user + employee atomically; returns temp password |
+| `/employees` | POST | admin | Creates user + employee + leave balances; returns temp password |
 | `/employees/{id}` | PUT | admin | Full edit |
 | `/employees/{id}` | DELETE | admin | Soft-terminate: status TERMINATED, user.is_active = False |
+| `/leave-types` | GET | user | List |
+| `/leave-types` | POST | admin | Create |
+| `/leave-types/{id}` | PUT | admin | Update |
+| `/leave-types/{id}` | DELETE | admin | Blocked if balances exist — use `is_active=false` instead |
+| `/leave/balances/me` | GET | user | Own balances; `?year=` defaults to current year |
+| `/leave/balances` | GET | admin | Filters: `employee_id`, `year` |
+| `/leave/balances/{id}` | PUT | admin | Adjust `allocated_days` and/or `used_days` |
 | `/health` | GET | — | Liveness probe |
 
-Subsequent steps add `/leave/*`, `/attendance/*`, `/announcements`, `/admin/stats` (see `mvp.md` §5).
+Subsequent steps add `/leave/requests/*`, `/attendance/*`, `/announcements`, `/admin/stats` (see `mvp.md` §5).
 
-## After pulling step 2
+## After pulling step 3
 
 ```bash
 cd backend
-alembic revision --autogenerate -m "departments and employees"
+alembic revision --autogenerate -m "leave types and balances"
 alembic upgrade head
 python -m app.seed
 ```
 
-The new migration adds the `departments` and `employees` tables plus the circular FK between `departments.head_employee_id` and `employees.id` (handled with `use_alter`). Re-running the seed is safe; it only inserts missing rows.
+The new migration adds `leave_types` and `leave_balances` (unique on `(employee_id, leave_type_id, year)`). The seed inserts four sample leave types and idempotently allocates current-year balances for every employee. New employees created via `POST /employees` automatically get balances for every active leave type.

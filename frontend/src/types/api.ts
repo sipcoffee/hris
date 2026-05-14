@@ -90,3 +90,23 @@ export interface Token {
   access_token: string;
   token_type: string;
 }
+
+export interface LeaveType {
+  id: number;
+  name: string;
+  slug: string;
+  default_days_per_year: string;
+  is_paid: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface LeaveBalance {
+  id: number;
+  employee_id: number;
+  year: number;
+  allocated_days: string;
+  used_days: string;
+  remaining_days: string;
+  leave_type: LeaveType;
+}

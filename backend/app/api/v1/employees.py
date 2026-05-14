@@ -10,6 +10,7 @@ from app.models.department import Department
 from app.models.employee import Employee, EmploymentStatus
 from app.models.user import User, UserRole
 from app.schemas.department import DepartmentSummary
+from app.services.leave_service import allocate_balances_for_employee
 from app.schemas.employee import (
     EmployeeCreate,
     EmployeeCreated,
@@ -205,6 +206,8 @@ def create_employee(payload: EmployeeCreate, db: DbSession, admin: AdminUser) ->
         salary=payload.salary,
     )
     db.add(employee)
+    db.flush()
+    allocate_balances_for_employee(db, employee.id)
     db.commit()
     employee = _load(db, employee.id)
     return EmployeeCreated(employee=_to_out(employee, admin), temporary_password=payload.password)

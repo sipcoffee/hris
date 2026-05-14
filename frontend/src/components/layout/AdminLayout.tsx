@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { ArrowLeft, Building2, CalendarClock, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { Wordmark } from "@/components/Logo";
@@ -10,6 +10,7 @@ const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/employees", label: "Employees", icon: Users },
   { to: "/admin/departments", label: "Departments", icon: Building2 },
+  { to: "/admin/leave-types", label: "Leave types", icon: CalendarClock },
 ];
 
 export function AdminLayout() {

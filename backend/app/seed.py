@@ -1,8 +1,9 @@
-"""Seed the database with the admin user, sample departments and employees.
+"""Seed the database with the admin user, sample departments, employees, and leave types.
 
 Run with: python -m app.seed
 """
 from datetime import date
+from decimal import Decimal
 
 from slugify import slugify
 from sqlalchemy import select
@@ -12,7 +13,9 @@ from app.core.database import Base, SessionLocal, engine
 from app.core.security import hash_password
 from app.models.department import Department
 from app.models.employee import Employee, EmploymentStatus, EmploymentType
+from app.models.leave import LeaveType
 from app.models.user import User, UserRole
+from app.services.leave_service import allocate_balances_for_employee
 
 SAMPLE_DEPARTMENTS = [
     {"name": "Engineering", "description": "Builders of the product."},
@@ -20,7 +23,6 @@ SAMPLE_DEPARTMENTS = [
     {"name": "Operations", "description": "Finance, IT, and facilities."},
 ]
 
-# Each tuple: (email, first, last, role, title, is_manager_of_dept)
 SAMPLE_PEOPLE: dict[str, list[dict]] = {
     "Engineering": [
         {"email": "sarah.chen@hris.local", "first": "Sarah", "last": "Chen", "title": "Engineering Lead", "manager": True},
@@ -38,6 +40,13 @@ SAMPLE_PEOPLE: dict[str, list[dict]] = {
         {"email": "drew.singh@hris.local", "first": "Drew", "last": "Singh", "title": "IT Specialist", "manager": False},
     ],
 }
+
+SAMPLE_LEAVE_TYPES = [
+    {"name": "Annual", "default_days_per_year": Decimal("20"), "is_paid": True},
+    {"name": "Sick", "default_days_per_year": Decimal("10"), "is_paid": True},
+    {"name": "Unpaid", "default_days_per_year": Decimal("0"), "is_paid": False},
+    {"name": "Bereavement", "default_days_per_year": Decimal("5"), "is_paid": True},
+]
 
 DEFAULT_EMPLOYEE_PASSWORD = "ChangeMe123!"
 
@@ -62,6 +71,22 @@ def main() -> None:
         else:
             print(f"Admin already exists: {settings.ADMIN_EMAIL}")
 
+        for lt in SAMPLE_LEAVE_TYPES:
+            existing = db.scalar(select(LeaveType).where(LeaveType.name == lt["name"]))
+            if existing:
+                continue
+            db.add(
+                LeaveType(
+                    name=lt["name"],
+                    slug=slugify(lt["name"]),
+                    default_days_per_year=lt["default_days_per_year"],
+                    is_paid=lt["is_paid"],
+                    is_active=True,
+                )
+            )
+            print(f"Created leave type: {lt['name']}")
+        db.flush()
+
         dept_map: dict[str, Department] = {}
         for d in SAMPLE_DEPARTMENTS:
             existing = db.scalar(select(Department).where(Department.name == d["name"]))
@@ -75,11 +100,11 @@ def main() -> None:
             print(f"Created department: {d['name']}")
 
         hire = date.today()
+        new_employee_ids: list[int] = []
         for dept_name, people in SAMPLE_PEOPLE.items():
             dept = dept_map[dept_name]
             manager_employee: Employee | None = None
 
-            # First pass: create the manager so the others can reference them.
             for person in people:
                 existing_user = db.scalar(select(User).where(User.email == person["email"]))
                 if existing_user:
@@ -106,6 +131,7 @@ def main() -> None:
                 )
                 db.add(employee)
                 db.flush()
+                new_employee_ids.append(employee.id)
                 if person["manager"]:
                     manager_employee = employee
                     dept.head_employee_id = employee.id
@@ -118,6 +144,10 @@ def main() -> None:
                     .where(Employee.id != manager_employee.id)
                     .values(manager_id=manager_employee.id)
                 )
+
+        # Allocate current-year leave balances for every employee (idempotent).
+        for emp_id in db.scalars(select(Employee.id)).all():
+            allocate_balances_for_employee(db, emp_id)
 
         db.commit()
         print("Seed complete.")
