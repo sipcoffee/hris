@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, Shield, Users } from "lucide-react";
+import { ArrowRight, CalendarRange, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { LeaveBalanceWidget } from "@/components/leave/LeaveBalanceWidget";
@@ -19,6 +19,8 @@ export function DashboardPage() {
   const greeting = user.employee
     ? `Hi, ${user.employee.first_name}`
     : `Hi, ${user.email}`;
+
+  const canManage = user.role === "MANAGER" || user.role === "ADMIN";
 
   return (
     <div className="container py-10">
@@ -46,27 +48,46 @@ export function DashboardPage() {
 
         <Card className="transition-colors hover:border-primary/40">
           <CardHeader>
-            <Building2 className="h-5 w-5 text-primary" />
-            <CardTitle>My profile</CardTitle>
-            <CardDescription>Update contact details.</CardDescription>
+            <CalendarRange className="h-5 w-5 text-primary" />
+            <CardTitle>Time off</CardTitle>
+            <CardDescription>Request leave and track your balances.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="ghost" className="-ml-3">
-              <Link to="/me">Open <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/leave">Open <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </CardContent>
         </Card>
 
-        {user.role === "ADMIN" && (
+        {canManage ? (
           <Card className="transition-colors hover:border-primary/40">
             <CardHeader>
               <Shield className="h-5 w-5 text-primary" />
-              <CardTitle>Admin</CardTitle>
-              <CardDescription>Manage employees and policies.</CardDescription>
+              <CardTitle>{user.role === "ADMIN" ? "Admin" : "Team"}</CardTitle>
+              <CardDescription>
+                {user.role === "ADMIN"
+                  ? "Manage employees, policies, and requests."
+                  : "Review and decide team leave requests."}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild variant="ghost" className="-ml-3">
-                <Link to="/admin">Open <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                <Link to={user.role === "ADMIN" ? "/admin" : "/team/leave"}>
+                  Open <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="transition-colors hover:border-primary/40">
+            <CardHeader>
+              <Users className="h-5 w-5 text-primary" />
+              <CardTitle>My profile</CardTitle>
+              <CardDescription>Update contact details.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="ghost" className="-ml-3">
+                <Link to="/me">Open <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
             </CardContent>
           </Card>
@@ -83,12 +104,11 @@ export function DashboardPage() {
         <CardHeader>
           <CardTitle>Coming next</CardTitle>
           <CardDescription>
-            Step 3 (leave types and balances) is live. Leave requests with manager approval ship next.
+            Step 4 (leave requests + manager approval) is live. Attendance check-in / check-out is next.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>Leave requests with manager approval</li>
             <li>Attendance check-in / check-out</li>
             <li>Announcements and admin dashboard stats</li>
           </ul>

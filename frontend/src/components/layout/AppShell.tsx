@@ -23,6 +23,7 @@ function Navbar() {
     );
 
   const badge = user.role === "MANAGER" ? "Manager" : undefined;
+  const canManage = user.role === "MANAGER" || user.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -34,6 +35,10 @@ function Navbar() {
         <nav className="hidden items-center gap-7 md:flex">
           <NavLink to="/dashboard" className={navItem}>Dashboard</NavLink>
           <NavLink to="/directory" className={navItem}>Directory</NavLink>
+          <NavLink to="/leave" className={navItem}>Time off</NavLink>
+          {canManage && (
+            <NavLink to="/team/leave" className={navItem}>Team</NavLink>
+          )}
           <NavLink to="/me" className={navItem}>My profile</NavLink>
           {user.role === "ADMIN" && (
             <NavLink to="/admin" className={navItem}>Admin</NavLink>
@@ -81,6 +86,10 @@ function Navbar() {
           <div className="container flex flex-col gap-1 py-3">
             <MobileLink to="/dashboard" onClick={() => setOpen(false)}>Dashboard</MobileLink>
             <MobileLink to="/directory" onClick={() => setOpen(false)}>Directory</MobileLink>
+            <MobileLink to="/leave" onClick={() => setOpen(false)}>Time off</MobileLink>
+            {canManage && (
+              <MobileLink to="/team/leave" onClick={() => setOpen(false)}>Team</MobileLink>
+            )}
             <MobileLink to="/me" onClick={() => setOpen(false)}>My profile</MobileLink>
             {user.role === "ADMIN" && (
               <MobileLink to="/admin" onClick={() => setOpen(false)}>

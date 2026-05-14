@@ -110,3 +110,25 @@ export interface LeaveBalance {
   remaining_days: string;
   leave_type: LeaveType;
 }
+
+export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+
+export interface DecidedBy {
+  id: number;
+  email: string;
+}
+
+export interface LeaveRequest {
+  id: number;
+  employee: EmployeeSummary;
+  leave_type: LeaveType;
+  start_date: string;
+  end_date: string;
+  days_count: number;
+  reason: string;
+  status: LeaveStatus;
+  decided_at: string | null;
+  decision_note: string | null;
+  decided_by: DecidedBy | null;
+  created_at: string;
+}
